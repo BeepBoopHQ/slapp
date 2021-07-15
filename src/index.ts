@@ -39,6 +39,8 @@ export {
   InstallURLOptions,
   InstallationQuery,
   InstallationStore,
+  MemoryInstallationStore,
+  FileInstallationStore,
   StateStore,
   InstallProviderOptions,
 } from '@slack/oauth';
