@@ -95,7 +95,7 @@ Bolt には、アプリをカスタマイズするためのさまざまな初期
 | `clientId` | アプリの設定で指定した、クライアントの ID を示す 文字列。[OAuth の設定を行うために必要です](/bolt-js/concepts#authenticating-oauth)。 |
 | `clientSecret` | アプリの設定で指定した、クライアントのシークレットキーを示す 文字列。[OAuth の設定を行うために必要です](/bolt-js/concepts#authenticating-oauth)。 |
 | `stateSecret` | CSRF 攻撃を防ぐために [OAuth の設定時](/bolt-js/concepts#authenticating-oauth)に渡すことができる、推奨のパラメーター（文字列）。 |
-| `installationStore` | [OAuth の設定時](/bolt-js/concepts#authenticating-oauth)に、インストールデータの保存と取得の手段を定義します。`fetchInstallation` と `storeInstallation` という 2 つのメソッドが含まれます。デフォルトの `installationStore` はインメモリストアです。 |
+| `installationStore` | [OAuth の設定時](/bolt-js/ja-jp/concepts#authenticating-oauth)に、インストールデータの保存・取得・削除の手段を定義します。`fetchInstallation` 、`storeInstallation`、`deleteInstallation` という 3 つのメソッドが含まれます。デフォルトの `installationStore` はインメモリストアです。 |
 | `scopes` | アプリが [OAuth のプロセスの中で](/bolt-js/concepts#authenticating-oauth)アクセス許可を求めるスコープのリスト。 |
 | `installerOptions` | [デフォルトの OAuth サポート](/bolt-js/concepts#authenticating-oauth)をカスタマイズする場合に指定するオブジェクト（必須ではない）。詳しくは、OAuth のドキュメントを参照してください。 |
 

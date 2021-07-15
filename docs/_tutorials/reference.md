@@ -93,7 +93,7 @@ Bolt includes a collection of initialization options to customize apps. There ar
 | `clientId` | The client ID `string` from your app's configuration which is [required to configure OAuth](/bolt-js/concepts#authenticating-oauth). |
 | `clientSecret` | The client secret `string` from your app's configuration which is [required to configure OAuth](/bolt-js/concepts#authenticating-oauth). |
 | `stateSecret` | Recommended parameter (`string`) that's passed when [configuring OAuth](/bolt-js/concepts#authenticating-oauth) to prevent CSRF attacks |
-| `installationStore` | Defines how to save and fetch installation data when [configuring OAuth](/bolt-js/concepts#authenticating-oauth). Contains two methods: `fetchInstallation` and `storeInstallation`. The default `installationStore` is an in-memory store. |
+| `installationStore` | Defines how to save, fetch and delete installation data when [configuring OAuth](/bolt-js/concepts#authenticating-oauth). Contains three methods: `fetchInstallation`, `storeInstallation` and `deleteInstallation`. The default `installationStore` is an in-memory store. |
 | `scopes` | Array of scopes that your app will request [within the OAuth process](/bolt-js/concepts#authenticating-oauth). |
 | `installerOptions` | Optional object that can be used to customize [the default OAuth support](/bolt-js/concepts#authenticating-oauth). Read more in the OAuth documentation. |
 

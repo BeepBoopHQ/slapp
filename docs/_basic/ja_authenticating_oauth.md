@@ -50,6 +50,18 @@ const app = new App({
       }
       throw new Error('Failed fetching installation');
     },
+    deleteInstallation: async (installQuery) => {
+      // 実際のデータベースから削除するために、ここのコードを変更
+      if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
+        // OrG 全体へのインストール情報の削除
+        return await myDB.delete(installQuery.enterpriseId);
+      }
+      if (installQuery.teamId !== undefined) {
+        // 単独のワークスペースへのインストール情報の削除
+        return await myDB.delete(installQuery.teamId);
+      }
+      throw new Error('Failed to delete installation');
+    },
   },
 });
 ```
