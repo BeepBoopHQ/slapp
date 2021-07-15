@@ -81,6 +81,7 @@ export interface AppOptions {
   socketMode?: boolean;
   developerMode?: boolean;
   tokenVerificationEnabled?: boolean;
+  extendedErrorHandler?: boolean;
 }
 
 export { LogLevel, Logger } from '@slack/logger';
@@ -128,8 +129,20 @@ export interface ViewConstraints {
   type?: 'view_closed' | 'view_submission';
 }
 
+export interface AllErrorHandlerArgs {
+  error: Error;
+  logger: Logger;
+  body: AnyMiddlewareArgs['body'];
+  context: Context;
+}
+
+export interface ExtendedErrorHandlerArgs extends AllErrorHandlerArgs {
+  error: CodedError;
+}
+
 export interface ErrorHandler {
-  (error: CodedError): Promise<void>;
+  <CodedError>(error: CodedError): Promise<void>;
+  <ExtendedErrorHandlerArgs>(args: ExtendedErrorHandlerArgs): Promise<void>;
 }
 
 class WebClientPool {
@@ -186,6 +199,10 @@ export default class App {
 
   private developerMode: boolean;
 
+  private extendedErrorHandler: boolean;
+
+  private hasCustomErrorHandler: boolean;
+
   constructor({
     signingSecret = undefined,
     endpoints = undefined,
@@ -212,6 +229,7 @@ export default class App {
     socketMode = undefined,
     developerMode = false,
     tokenVerificationEnabled = true,
+    extendedErrorHandler = false,
   }: AppOptions = {}) {
     // this.logLevel = logLevel;
     this.developerMode = developerMode;
@@ -238,7 +256,9 @@ export default class App {
     if (typeof this.logLevel !== 'undefined' && this.logger.getLevel() !== this.logLevel) {
       this.logger.setLevel(this.logLevel);
     }
+    this.hasCustomErrorHandler = false;
     this.errorHandler = defaultErrorHandler(this.logger);
+    this.extendedErrorHandler = extendedErrorHandler;
 
     this.clientOptions = clientOptions !== undefined ? clientOptions : {};
     if (agent !== undefined && this.clientOptions.agent === undefined) {
@@ -638,6 +658,7 @@ export default class App {
 
   public error(errorHandler: ErrorHandler): void {
     this.errorHandler = errorHandler;
+    this.hasCustomErrorHandler = true;
   }
 
   /**
@@ -680,7 +701,12 @@ export default class App {
     } catch (error) {
       this.logger.warn('Authorization of incoming event did not succeed. No listeners will be called.');
       error.code = 'slack_bolt_authorization_error';
-      return this.handleError(error);
+      return this.handleError({
+        error,
+        logger: this.logger,
+        body: bodyArg,
+        context: {},
+      });
     }
 
     // Try to set teamId from AuthorizeResult before using one from source
@@ -856,15 +882,24 @@ export default class App {
         },
       );
     } catch (error) {
-      return this.handleError(error);
+      return this.handleError({
+        error,
+        context,
+        logger: this.logger,
+        body: bodyArg,
+      });
     }
   }
 
   /**
    * Global error handler. The final destination for all errors (hopefully).
    */
-  private handleError(error: Error): Promise<void> {
-    return this.errorHandler(asCodedError(error));
+  private handleError(args: AllErrorHandlerArgs): Promise<void> {
+    const { error, ...rest } = args;
+
+    return this.extendedErrorHandler && this.hasCustomErrorHandler
+      ? this.errorHandler<ExtendedErrorHandlerArgs>({ error: asCodedError(error), ...rest })
+      : this.errorHandler<CodedError>(asCodedError(error));
   }
 }
 
@@ -876,7 +911,7 @@ const tokenUsage =
   'should be initialized with oauth installer or authorize.';
 
 function defaultErrorHandler(logger: Logger): ErrorHandler {
-  return (error) => {
+  return (error: CodedError) => {
     logger.error(error);
 
     return Promise.reject(error);
