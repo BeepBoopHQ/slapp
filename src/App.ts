@@ -29,6 +29,7 @@ import {
   SlackActionMiddlewareArgs,
   SlackCommandMiddlewareArgs,
   SlackEventMiddlewareArgs,
+  SlackSubtypedEventMiddlewareArgs,
   SlackOptionsMiddlewareArgs,
   SlackShortcutMiddlewareArgs,
   SlackViewMiddlewareArgs,
@@ -476,9 +477,16 @@ export default class App {
 
   // TODO: just make a type alias for Middleware<SlackEventMiddlewareArgs<'message'>>
   // TODO: maybe remove the first two overloads
-  public message(...listeners: Middleware<SlackEventMiddlewareArgs<'message'>>[]): void;
-  public message(pattern: string | RegExp, ...listeners: Middleware<SlackEventMiddlewareArgs<'message'>>[]): void;
-  public message(...patternsOrMiddleware: (string | RegExp | Middleware<SlackEventMiddlewareArgs<'message'>>)[]): void {
+  public message<Subtype extends string | undefined = '*'>(
+    ...listeners: Middleware<SlackSubtypedEventMiddlewareArgs<'message', Subtype>>[]
+  ): void;
+  public message<Subtype extends string | undefined = '*'>(
+    pattern: string | RegExp,
+    ...listeners: Middleware<SlackSubtypedEventMiddlewareArgs<'message', Subtype>>[]
+  ): void;
+  public message<Subtype extends string | undefined = '*'>(
+    ...patternsOrMiddleware: (string | RegExp | Middleware<SlackSubtypedEventMiddlewareArgs<'message', Subtype>>)[]
+  ): void {
     const messageMiddleware = patternsOrMiddleware.map((patternOrMiddleware) => {
       if (typeof patternOrMiddleware === 'string' || util.types.isRegExp(patternOrMiddleware)) {
         return matchMessage(patternOrMiddleware);

@@ -4,8 +4,6 @@ import { App, MessageEvent, GenericMessageEvent, BotMessageEvent, MessageReplied
 const app = new App({ token: 'TOKEN', signingSecret: 'Signing Secret' });
 
 expectType<void>(
-  // TODO: Resolve the event type when having subtype in a listener constraint
-  // app.message({pattern: 'foo', subtype: 'message_replied'}, async ({ message }) => {});
   app.message(async ({ message }) => {
     expectType<MessageEvent>(message);
 
@@ -67,6 +65,32 @@ expectType<void>(
       message.root; // the property access should compile
     }
 
+    await Promise.resolve(message);
+  }),
+);
+
+// Resolve the event type when having subtype in a listener constraint
+// app.message<'message_replied'>('foo', async ({ message }) => {});
+
+expectType<void>(
+  app.message<'thread_broadcast'>('foo', async ({ message }) => {
+    expectNotType<MessageEvent>(message);
+    expectType<ThreadBroadcastMessageEvent>(message);
+    message.channel; // the property access should compile
+    message.thread_ts; // the property access should compile
+    message.ts; // the property access should compile
+    message.root; // the property access should compile
+    await Promise.resolve(message);
+  }),
+);
+expectType<void>(
+  // no subtype in the event payload
+  app.message<undefined>('foo', async ({ message }) => {
+    expectNotType<MessageEvent>(message);
+    expectType<GenericMessageEvent>(message);
+    message.user; // the property access should compile
+    message.channel; // the property access should compile
+    message.team; // the property access should compile
     await Promise.resolve(message);
   }),
 );

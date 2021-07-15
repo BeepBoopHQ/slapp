@@ -1,5 +1,6 @@
 export * from './base-events';
 export {
+  MessageEvent as AllMessageEvent,
   BotMessageEvent,
   GenericMessageEvent,
   MessageRepliedEvent,
@@ -18,6 +19,17 @@ import { SayFn } from '../utilities';
  */
 export interface SlackEventMiddlewareArgs<EventType extends string = string> {
   payload: EventFromType<EventType>;
+  event: this['payload'];
+  message: EventType extends 'message' ? this['payload'] : never;
+  body: EnvelopedEvent<this['payload']>;
+  say: WhenEventHasChannelContext<this['payload'], SayFn>;
+}
+
+export interface SlackSubtypedEventMiddlewareArgs<
+  EventType extends string = string,
+  EventSubtype extends string | undefined = undefined
+> {
+  payload: EventSubtype extends '*' ? EventFromType<EventType> : EventFromTypeAndSubtype<EventType, EventSubtype>;
   event: this['payload'];
   message: EventType extends 'message' ? this['payload'] : never;
   body: EnvelopedEvent<this['payload']>;
@@ -60,7 +72,17 @@ interface Authorization {
  * Otherwise, the `BasicSlackEvent<T>` type is returned.
  */
 type EventFromType<T extends string> = KnownEventFromType<T> extends never ? BasicSlackEvent<T> : KnownEventFromType<T>;
+type EventFromTypeAndSubtype<T extends string, ST extends string | undefined> = KnownEventFromTypeAndSubtype<
+  T,
+  ST
+> extends never
+  ? BasicSlackEvent<T>
+  : KnownEventFromTypeAndSubtype<T, ST>;
 type KnownEventFromType<T extends string> = Extract<SlackEvent, { type: T }>;
+type KnownEventFromTypeAndSubtype<T extends string, ST extends string | undefined> = Extract<
+  SlackEvent,
+  { type: T; subtype: ST }
+>;
 
 /**
  * Type function which tests whether or not the given `Event` contains a channel ID context for where the event
