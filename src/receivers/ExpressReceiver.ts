@@ -11,7 +11,13 @@ import tsscmp from 'tsscmp';
 import { Logger, ConsoleLogger, LogLevel } from '@slack/logger';
 import { InstallProvider, CallbackOptions, InstallProviderOptions, InstallURLOptions } from '@slack/oauth';
 import App from '../App';
-import { ReceiverAuthenticityError, ReceiverMultipleAckError, ReceiverInconsistentStateError } from '../errors';
+import {
+  ReceiverAuthenticityError,
+  ReceiverMultipleAckError,
+  ReceiverInconsistentStateError,
+  ErrorCode,
+  CodedError,
+} from '../errors';
 import { AnyMiddlewareArgs, Receiver, ReceiverEvent } from '../types';
 import { renderHtmlForInstallPath } from './render-html-for-install-path';
 
@@ -207,6 +213,16 @@ export default class ExpressReceiver implements Receiver {
         this.logger.debug('stored response sent');
       }
     } catch (err) {
+      if ('code' in err) {
+        // CodedError has code: string
+        const errorCode = (err as CodedError).code;
+        if (errorCode === ErrorCode.AuthorizationError) {
+          // authorize function threw an exception, which means there is no valid installation data
+          res.status(401).send();
+          isAcknowledged = true;
+          return;
+        }
+      }
       res.status(500).send();
       throw err;
     }

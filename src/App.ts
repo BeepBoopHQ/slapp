@@ -48,7 +48,7 @@ import {
   RespondArguments,
 } from './types';
 import { IncomingEventType, getTypeAndConversation, assertNever } from './helpers';
-import { CodedError, asCodedError, AppInitializationError, MultipleListenerError } from './errors';
+import { CodedError, asCodedError, AppInitializationError, MultipleListenerError, ErrorCode } from './errors';
 // eslint-disable-next-line import/order
 import allSettled = require('promise.allsettled'); // eslint-disable-line @typescript-eslint/no-require-imports
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -679,7 +679,7 @@ export default class App {
       }
     } catch (error) {
       this.logger.warn('Authorization of incoming event did not succeed. No listeners will be called.');
-      error.code = 'slack_bolt_authorization_error';
+      error.code = ErrorCode.AuthorizationError;
       return this.handleError(error);
     }
 
@@ -876,7 +876,7 @@ const tokenUsage =
   'should be initialized with oauth installer or authorize.';
 
 function defaultErrorHandler(logger: Logger): ErrorHandler {
-  return (error) => {
+  return (error: CodedError) => {
     logger.error(error);
 
     return Promise.reject(error);
